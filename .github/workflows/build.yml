@@ -18,14 +18,13 @@ jobs:
       uses: android-actions/setup-android@v2
     - name: Build APK
       run: |
-        cd antigravity-mobile-1.0.0
         chmod +x build.sh
         bash build.sh
     - name: Upload APK artifact
       uses: actions/upload-artifact@v3
       with:
         name: apk
-        path: antigravity-mobile-1.0.0/app/build/outputs/apk/**/*.apk
+        path: app/build/outputs/apk/**/*.apk
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -42,6 +41,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: antigravity-mobile-1.0.0/app/build/outputs/apk/**/*.apk
+        asset_path: app/build/outputs/apk/release/app-release-unsigned.apk
         asset_name: antigravity.apk
         asset_content_type: application/vnd.android.package-archive
