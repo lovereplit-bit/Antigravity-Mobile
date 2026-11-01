@@ -1,0 +1,57 @@
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/Inter-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./fonts/Inter-Medium.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./fonts/Inter-SemiBold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fonts/Inter-Bold.woff2') format('woff2');
+}
+
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-inter: 'Inter', sans-serif;
+}
+
+/* Apply Inter across entire interface, windows, dialogs, chats, and messages */
+html, body, button, input, select, textarea, [role="dialog"], [role="menu"], [role="tooltip"],
+.antigravity-ui, #root, #root *, .chat-message, .message-bubble, .markdown p, .markdown li, .markdown span, .markdown h1, .markdown h2, .markdown h3, .markdown h4, .markdown h5, .markdown h6 {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-feature-settings: 'cv05' 1, 'cv08' 1, 'calt' 1, 'kern' 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tabular figures for beautiful numbers in badges, counters, and prices */
+.tabular-nums, [data-testid*="token"], [data-testid*="count"], [data-testid*="price"], .font-mono-numbers {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'cv05' 1, 'cv08' 1;
+}
+
+/* Preserve monospace strictly for code blocks and terminal */
+code, pre, .font-mono, .monaco-editor, .xterm, pre * {
+  font-family: 'JetBrains Mono', Consolas, Monaco, 'Ubuntu Mono', monospace !important;
+  font-feature-settings: normal !important;
+}

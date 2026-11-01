@@ -82,10 +82,36 @@ def patch_main(file_path):
     content = content.replace(orig_hook, injected_hook, 1)
     content = content.replace(orig_theme, injected_theme, 1)
 
+    # 3. Default Settings & Sound Alerts Patches
+    extra_patches = [
+        # Byc: artifactReviewMode = TURBO ("Всегда продолжать"), enableSounds = true
+        ("artifactReviewPolicy:I.ArtifactReviewMode.ALWAYS,secureModeEnabled:!1,explainAndFixInCurrentConversation:!0,conversationHistoryEnabled:!0,knowledgeEnabled:!0,enableSoundsForSpecialEvents:!1",
+         "artifactReviewPolicy:I.ArtifactReviewMode.TURBO,secureModeEnabled:!1,explainAndFixInCurrentConversation:!0,conversationHistoryEnabled:!0,knowledgeEnabled:!0,enableSoundsForSpecialEvents:!0"),
+        # hEa defaultPreset linux and macos = full_machine_unix ("Весь компьютер")
+        ("macos:{presets:[\"default_unix\",\"full_machine_unix\",\"unrestricted_unix\"],defaultPreset:\"default_unix\"},\nlinux:{presets:[\"default_unix\",\"full_machine_unix\",\"unrestricted_unix\"],defaultPreset:\"default_unix\"}",
+         "macos:{presets:[\"default_unix\",\"full_machine_unix\",\"unrestricted_unix\"],defaultPreset:\"full_machine_unix\"},\nlinux:{presets:[\"default_unix\",\"full_machine_unix\",\"unrestricted_unix\"],defaultPreset:\"full_machine_unix\"}"),
+        # nonWorkspaceFileAccessPolicy default = ALLOW (Security preset: full_machine_unix)
+        ("nonWorkspaceFileAccessPolicy:N===I.AgentSettingPolicy.UNSPECIFIED||N===void 0?I.AgentSettingPolicy.ASK:N",
+         "nonWorkspaceFileAccessPolicy:N===I.AgentSettingPolicy.UNSPECIFIED||N===void 0?I.AgentSettingPolicy.ALLOW:N"),
+        # M9 sound check default = true
+        ("a?.getEnableSoundsForSpecialEvents()??!1",
+         "a?.getEnableSoundsForSpecialEvents()??!0"),
+        # soundFiles: includes quotaExceeded sound
+        ("soundFiles:{cascadeDone:\"/antigravityCascadeDone.mp3\",actionRequired:\"/antigravityActionRequired.mp3\"}",
+         "soundFiles:{cascadeDone:\"/antigravityCascadeDone.mp3\",actionRequired:\"/antigravityActionRequired.mp3\",quotaExceeded:\"/antigravityQuotaExceeded.wav\"}"),
+        # wVb quota trigger
+        ("wVb=a=>{var b=a.notificationId,c=a.icon,",
+         "wVb=a=>{try{window.__agPlaySound&&window.__agPlaySound(\"quota\")}catch(_){}var b=a.notificationId,c=a.icon,")
+    ]
+
+    for p_orig, p_repl in extra_patches:
+        if p_orig in content:
+            content = content.replace(p_orig, p_repl, 1)
+
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
 
-    print("[web-patch] Successfully patched Режим рабочего стола toggle into main.js (mobile by default, English)")
+    print("[web-patch] Successfully patched settings defaults, sounds, and desktop toggle into main.js")
     return True
 
 if __name__ == "__main__":

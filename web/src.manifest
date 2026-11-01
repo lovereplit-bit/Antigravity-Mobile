@@ -61,3 +61,7 @@ src/patches/startup_ready/public-api.js
 bundle iife patches/i18n_ru.js
 src/patches/i18n_ru/dictionary.js
 src/patches/i18n_ru/engine.js
+
+bundle iife patches/sound_alerts.js
+src/patches/sound_alerts/sound_alerts.js
+

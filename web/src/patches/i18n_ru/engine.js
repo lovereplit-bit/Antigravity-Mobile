@@ -1,31 +1,76 @@
 /* Перевод текстов и атрибутов интерфейса на русский. */
-var RU_ATTRS = ['placeholder', 'title', 'aria-label', 'alt'];
-var RU_SKIP = 'pre, code, textarea, script, style, .xterm, .monaco-editor, .markdown, [contenteditable="true"], [data-no-i18n]';
+var RU_ATTRS = ['placeholder', 'title', 'aria-label', 'alt', 'data-tooltip', 'data-title', 'data-placeholder', 'value'];
+var RU_SKIP = 'pre, code, textarea, script, style, .xterm, .monaco-editor, [contenteditable="true"], [data-no-i18n]';
 var RU_RULES_C = RU_RULES.map(function (r) { return [new RegExp(r[0]), r[1]]; });
 var RU_CACHE = Object.create(null);
 var RU_MISSING = {};
 
+function ruTranslateCore(core) {
+  if (!core || core.length < 2) return null;
+  // 1. Direct dictionary match
+  if (Object.prototype.hasOwnProperty.call(RU_DICT, core)) {
+    return RU_DICT[core];
+  }
+  // 2. Strip trailing punctuation (: . ... ? ! ,)
+  var pMatch = core.match(/^([\s\S]*?)([:.?!,]+)$/);
+  if (pMatch) {
+    var base = pMatch[1], punct = pMatch[2];
+    if (Object.prototype.hasOwnProperty.call(RU_DICT, base)) {
+      return RU_DICT[base] + punct;
+    }
+  }
+  // 3. Strip surrounding quotes or brackets
+  var bMatch = core.match(/^([("'\u00AB])([\s\S]*?)([)"'\u00BB])$/);
+  if (bMatch) {
+    var inner = bMatch[2];
+    if (Object.prototype.hasOwnProperty.call(RU_DICT, inner)) {
+      return bMatch[1] + RU_DICT[inner] + bMatch[3];
+    }
+  }
+  // 4. Regex rules
+  for (var i = 0; i < RU_RULES_C.length; i++) {
+    if (RU_RULES_C[i][0].test(core)) {
+      return core.replace(RU_RULES_C[i][0], RU_RULES_C[i][1])
+        .replace(/(\d+)\s*s\b/g, '$1 с').replace(/(\d+)\s*m\b/g, '$1 мин').replace(/(\d+)\s*h\b/g, '$1 ч');
+    }
+  }
+  // 5. Check if string is separated by " > " or " / " or " | "
+  if (core.indexOf(' > ') !== -1) {
+    var parts = core.split(' > ');
+    var translatedParts = parts.map(function(p) { return ruTranslateCore(p.trim()) || p; });
+    if (translatedParts.some(function(tp, idx) { return tp !== parts[idx]; })) {
+      return translatedParts.join(' > ');
+    }
+  }
+  if (core.indexOf(' / ') !== -1) {
+    var p2 = core.split(' / ');
+    var tp2 = p2.map(function(p) { return ruTranslateCore(p.trim()) || p; });
+    if (tp2.some(function(tp, idx) { return tp !== p2[idx]; })) {
+      return tp2.join(' / ');
+    }
+  }
+  // 6. Check trailing space in dict
+  if (Object.prototype.hasOwnProperty.call(RU_DICT, core + ' ')) {
+    return RU_DICT[core + ' '].replace(/\s+$/, '');
+  }
+  return null;
+}
+
 function ruTranslate(s) {
-  if (!s || s.length > 600) return s;
+  if (!s || typeof s !== 'string' || s.length > 800) return s;
   var m = s.match(/^(\s*)([\s\S]*?)(\s*)$/);
   var core = m[2];
-  if (!core || !/[A-Za-z]{2}/.test(core) || /[\u0400-\u04FF]/.test(core)) return s;
+  if (!core || !/[A-Za-z]{2}/.test(core)) return s;
+
   var hit = RU_CACHE[core];
   if (hit === undefined) {
-    hit = Object.prototype.hasOwnProperty.call(RU_DICT, core) ? RU_DICT[core] : null;
-    if (hit === null) {
-      for (var i = 0; i < RU_RULES_C.length; i++) {
-        if (RU_RULES_C[i][0].test(core)) {
-          hit = core.replace(RU_RULES_C[i][0], RU_RULES_C[i][1])
-            .replace(/(\d+)\s*s\b/g, '$1 с').replace(/(\d+)\s*m\b/g, '$1 мин').replace(/(\d+)\s*h\b/g, '$1 ч');
-          break;
-        }
-      }
-    }
-    if (hit === null && Object.prototype.hasOwnProperty.call(RU_DICT, core + ' ')) hit = RU_DICT[core + ' '].replace(/\s+$/, '');
+    hit = ruTranslateCore(core);
     RU_CACHE[core] = hit;
   }
-  if (hit === null) { RU_MISSING[core] = 1; return s; }
+  if (hit === null) {
+    RU_MISSING[core] = 1;
+    return s;
+  }
   return m[1] + hit + m[3];
 }
 
@@ -34,6 +79,7 @@ function ruSkip(el) {
 }
 
 function ruNode(n) {
+  if (!n) return;
   if (n.nodeType === 3) {
     var p = n.parentNode;
     if (p && ruSkip(p)) return;
@@ -57,7 +103,7 @@ function ruFlush() {
 }
 function ruSchedule(n) {
   ruQueue.push(n);
-  if (!ruTimer) ruTimer = (window.requestAnimationFrame || setTimeout)(ruFlush);
+  if (!ruTimer) ruTimer = (window.requestAnimationFrame || setTimeout)(ruFlush, 16);
 }
 
 function ruInstall() {
