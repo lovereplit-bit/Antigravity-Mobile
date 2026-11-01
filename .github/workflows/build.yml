@@ -1,0 +1,27 @@
+name: Build APK
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+    - name: Install Android SDK
+      uses: android-actions/setup-android@v2
+    - name: Build APK
+      run: |
+        chmod +x antigravity-mobile-1.0.0/build.sh
+        bash antigravity-mobile-1.0.0/build.sh
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: apk
+        path: antigravity-mobile-1.0.0/app/build/outputs/apk/**/*.apk
