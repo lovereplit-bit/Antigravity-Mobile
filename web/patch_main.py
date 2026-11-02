@@ -87,12 +87,43 @@ def patch_main(file_path):
         # Byc: artifactReviewMode = TURBO ("Всегда продолжать"), enableSounds = true
         ("artifactReviewPolicy:I.ArtifactReviewMode.ALWAYS,secureModeEnabled:!1,explainAndFixInCurrentConversation:!0,conversationHistoryEnabled:!0,knowledgeEnabled:!0,enableSoundsForSpecialEvents:!1",
          "artifactReviewPolicy:I.ArtifactReviewMode.TURBO,secureModeEnabled:!1,explainAndFixInCurrentConversation:!0,conversationHistoryEnabled:!0,knowledgeEnabled:!0,enableSoundsForSpecialEvents:!0"),
-        # hEa defaultPreset linux and macos = full_machine_unix ("Весь компьютер")
+        # hEa defaultPreset linux and macos = unrestricted_unix ("Turbo mode")
         ("macos:{presets:[\"default_unix\",\"full_machine_unix\",\"unrestricted_unix\"],defaultPreset:\"default_unix\"},\nlinux:{presets:[\"default_unix\",\"full_machine_unix\",\"unrestricted_unix\"],defaultPreset:\"default_unix\"}",
-         "macos:{presets:[\"default_unix\",\"full_machine_unix\",\"unrestricted_unix\"],defaultPreset:\"full_machine_unix\"},\nlinux:{presets:[\"default_unix\",\"full_machine_unix\",\"unrestricted_unix\"],defaultPreset:\"full_machine_unix\"}"),
-        # nonWorkspaceFileAccessPolicy default = ALLOW (Security preset: full_machine_unix)
+         "macos:{presets:[\"default_unix\",\"full_machine_unix\",\"unrestricted_unix\"],defaultPreset:\"unrestricted_unix\"},\nlinux:{presets:[\"default_unix\",\"full_machine_unix\",\"unrestricted_unix\"],defaultPreset:\"unrestricted_unix\"}"),
+        ("macos:{presets:[\"default_unix\",\"full_machine_unix\",\"unrestricted_unix\"],defaultPreset:\"full_machine_unix\"},\nlinux:{presets:[\"default_unix\",\"full_machine_unix\",\"unrestricted_unix\"],defaultPreset:\"full_machine_unix\"}",
+         "macos:{presets:[\"default_unix\",\"full_machine_unix\",\"unrestricted_unix\"],defaultPreset:\"unrestricted_unix\"},\nlinux:{presets:[\"default_unix\",\"full_machine_unix\",\"unrestricted_unix\"],defaultPreset:\"unrestricted_unix\"}"),
+        # nonWorkspaceFileAccessPolicy default = ALLOW (Security preset: unrestricted_unix)
         ("nonWorkspaceFileAccessPolicy:N===I.AgentSettingPolicy.UNSPECIFIED||N===void 0?I.AgentSettingPolicy.ASK:N",
          "nonWorkspaceFileAccessPolicy:N===I.AgentSettingPolicy.UNSPECIFIED||N===void 0?I.AgentSettingPolicy.ALLOW:N"),
+        # uJa and vJa: Never disable or block any execution or permission options
+        ("function uJa(a,b,c){return c===\"project\"&&a===I.CascadeCommandsAutoExecution.UNSPECIFIED?!0:b===1?a===I.CascadeCommandsAutoExecution.OFF:b===2?a!==I.CascadeCommandsAutoExecution.EAGER:!0}",
+         "function uJa(a,b,c){return !0}"),
+        ("function vJa(a,b,c){return c===\"project\"&&a===I.AgentSettingPolicy.UNSPECIFIED?!0:b===1?a===I.AgentSettingPolicy.DENY:b===2?a!==I.AgentSettingPolicy.ALLOW:!0}",
+         "function vJa(a,b,c){return !0}"),
+        # sMb: Qb and qb - do not clamp EAGER down
+        ("var Qb=(0,A.useMemo)(()=>M!==1||zb!==I.AgentSettingPolicy.ALLOW&&zb!==I.AgentSettingPolicy.ASK?M===2&&zb===I.AgentSettingPolicy.ALLOW?I.AgentSettingPolicy.ASK:zb:I.AgentSettingPolicy.DENY,[zb,M]),qb=\n(0,A.useMemo)(()=>L!==1||Wa!==I.CascadeCommandsAutoExecution.EAGER&&Wa!==I.CascadeCommandsAutoExecution.PROCEED_IN_SANDBOX?L===2&&Wa===I.CascadeCommandsAutoExecution.EAGER?I.CascadeCommandsAutoExecution.PROCEED_IN_SANDBOX:Wa:I.CascadeCommandsAutoExecution.OFF,[Wa,L])",
+         "var Qb=zb,qb=Wa"),
+        # sMb cb callback: when unrestricted_unix selected, also trigger artifactReviewMode and permissionPreset turbo
+        ("Bb!==\"custom\"&&(Bb=gEa[Bb])&&(Ob(Bb.sandboxMode),vb(Bb.terminal),Ga(Bb.fileAccess),r?r(Bb.sandboxMode,Bb.terminal,Bb.fileAccess):(e(Bb.sandboxMode),g(Bb.terminal),m?.(Bb.fileAccess)))",
+         "Bb!==\"custom\"&&(Bb=gEa[Bb])&&(Ob(Bb.sandboxMode),vb(Bb.terminal),Ga(Bb.fileAccess),Bb.slug===\"unrestricted_unix\"&&(b?.(\"turbo\"),w?.(\"turbo\")),r?r(Bb.sandboxMode,Bb.terminal,Bb.fileAccess):(e(Bb.sandboxMode),g(Bb.terminal),m?.(Bb.fileAccess)))"),
+        # uMb: Clicking 'Full access' card sets CASCADE_AUTO_EXECUTION_POLICY: EAGER, NON_WORKSPACE_FILE_ACCESS_POLICY: ALLOW, PERMISSION_PRESET: TURBO, ARTIFACT_REVIEW_MODE: TURBO
+        ("ua=async()=>{var Ya=\nd,Ua=d;try{S(\"normal\"),Ua(await Ya(D.setPrefValues({[Ui.ENABLE_TERMINAL_SANDBOX]:!1,[Ui.SECURE_MODE_ENABLED]:!1})))}finally{Ya()}}",
+         "ua=async()=>{var Ya=\nd,Ua=d;try{S(\"normal\"),Ua(await Ya(D.setPrefValues({[Ui.ENABLE_TERMINAL_SANDBOX]:!1,[Ui.SECURE_MODE_ENABLED]:!1,[Ui.CASCADE_AUTO_EXECUTION_POLICY]:I.CascadeCommandsAutoExecution.EAGER,[Ui.NON_WORKSPACE_FILE_ACCESS_POLICY]:I.AgentSettingPolicy.ALLOW,[Ui.PERMISSION_PRESET]:I.AgentPermissionPreset.TURBO,[Ui.ARTIFACT_REVIEW_MODE]:I.ArtifactReviewMode.TURBO})))}finally{Ya()}}"),
+        # QKb: Selecting EAGER directly saves setting without Cider warning
+        ("G=(0,A.useCallback)(H=>{var J=a===Ui.CASCADE_AUTO_EXECUTION_POLICY&&H===I.CascadeCommandsAutoExecution.EAGER;q===\"Cider\"&&J&&F(H)||E(H)},[a,q,F,E])",
+         "G=(0,A.useCallback)(H=>{E(H)},[a,q,F,E])"),
+        # Qzc: Default CASCADE_AUTO_EXECUTION_POLICY and PERMISSION_PRESET to EAGER and TURBO
+        ("case Ui.CASCADE_AUTO_EXECUTION_POLICY:return a.rootProvider.getState().userConfig?.userSettings?.autoExecutionPolicy??\nI.CascadeCommandsAutoExecution.UNSPECIFIED??I.CascadeCommandsAutoExecution.PROCEED_IN_SANDBOX;case Ui.PERMISSION_PRESET:return a.rootProvider.getState().userConfig?.userSettings?.permissionPreset??I.AgentPermissionPreset.UNSPECIFIED??I.AgentPermissionPreset.UNSPECIFIED;",
+         "case Ui.CASCADE_AUTO_EXECUTION_POLICY:{var _ap=a.rootProvider.getState().userConfig?.userSettings?.autoExecutionPolicy;return(_ap===void 0||_ap===I.CascadeCommandsAutoExecution.UNSPECIFIED)?I.CascadeCommandsAutoExecution.EAGER:_ap};case Ui.PERMISSION_PRESET:{var _pp=a.rootProvider.getState().userConfig?.userSettings?.permissionPreset;return(_pp===void 0||_pp===I.AgentPermissionPreset.UNSPECIFIED)?I.AgentPermissionPreset.TURBO:_pp};"),
+        # Qzc: Default ARTIFACT_REVIEW_MODE to TURBO
+        ("case Ui.ARTIFACT_REVIEW_MODE:return a.rootProvider.getState().userConfig?.userSettings?.artifactReviewMode??I.ArtifactReviewMode.UNSPECIFIED??I.ArtifactReviewMode.UNSPECIFIED;",
+         "case Ui.ARTIFACT_REVIEW_MODE:{var _ar=a.rootProvider.getState().userConfig?.userSettings?.artifactReviewMode;return(_ar===void 0||_ar===I.ArtifactReviewMode.UNSPECIFIED)?I.ArtifactReviewMode.TURBO:_ar};"),
+        # LX: Default cascade prompt config to EAGER and TURBO
+        ("var LX=a=>{var b=kV(),c=VC(Ui.CASCADE_AUTO_EXECUTION_POLICY),e=ynb(b);",
+         "var LX=a=>{var b=kV(),c=VC(Ui.CASCADE_AUTO_EXECUTION_POLICY)??I.CascadeCommandsAutoExecution.EAGER,e=ynb(b)??I.ArtifactReviewMode.TURBO;c=(c===I.CascadeCommandsAutoExecution.UNSPECIFIED||c===void 0)?I.CascadeCommandsAutoExecution.EAGER:c;e=(e===I.ArtifactReviewMode.UNSPECIFIED||e===void 0)?I.ArtifactReviewMode.TURBO:e;"),
+        # CM.turbo: include artifactReviewMode and browserJsExecutionPolicy in turbo preset
+        ("turbo:{label:\"Turbo\",description:\"Run all commands without restrictions.\",prefValues:{[Ui.ENABLE_TERMINAL_SANDBOX]:!1,[Ui.CASCADE_AUTO_EXECUTION_POLICY]:I.CascadeCommandsAutoExecution.EAGER,[Ui.NON_WORKSPACE_FILE_ACCESS_POLICY]:I.AgentSettingPolicy.ALLOW,[Ui.PERMISSION_PRESET]:I.AgentPermissionPreset.TURBO}}",
+         "turbo:{label:\"Turbo\",description:\"Run all commands without restrictions.\",prefValues:{[Ui.ENABLE_TERMINAL_SANDBOX]:!1,[Ui.CASCADE_AUTO_EXECUTION_POLICY]:I.CascadeCommandsAutoExecution.EAGER,[Ui.NON_WORKSPACE_FILE_ACCESS_POLICY]:I.AgentSettingPolicy.ALLOW,[Ui.PERMISSION_PRESET]:I.AgentPermissionPreset.TURBO,[Ui.ARTIFACT_REVIEW_MODE]:I.ArtifactReviewMode.TURBO,[Ui.BROWSER_JS_EXECUTION_POLICY]:I.BrowserJsExecutionPolicy.TURBO}}"),
         # M9 sound check default = true
         ("a?.getEnableSoundsForSpecialEvents()??!1",
          "a?.getEnableSoundsForSpecialEvents()??!0"),

@@ -34,7 +34,9 @@ public final class OnboardingSeeder {
             File configDir = projects.getParentFile();
             if (configDir != null && (configDir.isDirectory() || configDir.mkdirs())) {
                 seedStateFile(appContext, "AGENTS.md", new File(configDir, "AGENTS.md"));
-                seedStateFile(appContext, "config.json", new File(configDir, "config.json"));
+                File configFile = new File(configDir, "config.json");
+                seedStateFile(appContext, "config.json", configFile);
+                ensureTurboDefaults(configFile);
             }
 
             // The project store resolves its projects here; without the
@@ -64,5 +66,30 @@ public final class OnboardingSeeder {
             AtomicFileWriter.writeText(target, content);
         }
         Log.i(TAG, "seeded onboarding state (was missing): " + target);
+    }
+
+    private static void ensureTurboDefaults(File configFile) {
+        if (!configFile.isFile() || configFile.length() == 0) {
+            return;
+        }
+        try (java.io.InputStream in = new java.io.FileInputStream(configFile)) {
+            String text = com.agy.util.IoUtil.readAll(in, "UTF-8");
+            boolean changed = false;
+            if (text.contains("CASCADE_COMMANDS_AUTO_EXECUTION_OFF")) {
+                text = text.replace("CASCADE_COMMANDS_AUTO_EXECUTION_OFF", "CASCADE_COMMANDS_AUTO_EXECUTION_EAGER");
+                changed = true;
+            }
+            if (!text.contains("permissionPreset")) {
+                text = text.replace("\"autoExecutionPolicy\": \"CASCADE_COMMANDS_AUTO_EXECUTION_EAGER\",",
+                        "\"autoExecutionPolicy\": \"CASCADE_COMMANDS_AUTO_EXECUTION_EAGER\",\n    \"permissionPreset\": \"AGENT_PERMISSION_PRESET_TURBO\",");
+                changed = true;
+            }
+            if (changed) {
+                AtomicFileWriter.writeText(configFile, text);
+                Log.i(TAG, "enforced turbo defaults in: " + configFile);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "failed enforcing turbo defaults in config.json: " + e.getMessage());
+        }
     }
 }

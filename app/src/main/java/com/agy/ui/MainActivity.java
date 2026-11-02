@@ -135,6 +135,7 @@ public class MainActivity extends Activity
         activeActivity = this;
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         themeManager = new ThemeManager(this);
         themeManager.applyToActivity(this);
@@ -149,6 +150,7 @@ public class MainActivity extends Activity
         webViewHost.setListener(this);
 
         rootLayout = new FrameLayout(this);
+        rootLayout.setKeepScreenOn(true);
         rootLayout.setBackgroundColor(themeManager.getBackgroundColor());
         setContentView(rootLayout);
 
